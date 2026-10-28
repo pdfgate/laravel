@@ -51,7 +51,9 @@ final class WebhookRouteRegistrar
     }
 
     /**
-     * @return list<class-string>
+     * Class names of the CSRF middleware present in the installed Laravel version.
+     *
+     * @return list<string>
      */
     public static function csrfMiddleware(): array
     {
