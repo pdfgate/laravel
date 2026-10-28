@@ -17,7 +17,6 @@ PDFGate lets you generate, process and sign PDFs from your Laravel app:
 - Receive signed webhook events as Laravel events
 
 📘 API Documentation: https://pdfgate.com/documentation<br>
-🧭 PHP SDK Reference: https://pdfgate.github.io/pdfgate-sdk-php/<br>
 🔑 Dashboard & API keys: https://dashboard.pdfgate.com
 
 ## Requirements
@@ -49,7 +48,7 @@ php artisan vendor:publish --tag=pdfgate-config
 
 ## Usage
 
-Every method of the SDK's `PdfGateClient` is available on the `PdfGate` facade. See the [PHP SDK documentation](https://pdfgate.github.io/pdfgate-sdk-php/) for the full list of methods and request options.
+Every method of the SDK's `PdfGateClient` is available on the `PdfGate` facade. See the [API documentation](https://pdfgate.com/documentation) for the full list of endpoints and request options.
 
 ### Generate a PDF
 
