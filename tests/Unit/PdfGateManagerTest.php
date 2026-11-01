@@ -6,6 +6,7 @@ namespace PdfGate\Laravel\Tests\Unit;
 
 use Illuminate\Support\Facades\Storage;
 use PdfGate\Dto\PdfGateDocumentMetadata;
+use PdfGate\Dto\PdfGateRecipient;
 use PdfGate\Http\HttpResponse;
 use PdfGate\Laravel\Facades\PdfGate;
 use PdfGate\Laravel\Tests\TestCase;
@@ -31,6 +32,38 @@ final class PdfGateManagerTest extends TestCase
         $this->assertCount(1, $this->transport->requests);
         $this->assertSame('https://api-sandbox.pdfgate.com/v1/generate/pdf', $this->transport->requests[0]->getUrl());
         $this->assertSame(['html' => '<h1>Hi</h1>', 'jsonResponse' => true], $this->transport->requests[0]->getJsonBody());
+    }
+
+    public function testFacadeForwardsAutomaticSigningMethods(): void
+    {
+        $this->transport->queueJson([
+            'id' => 'rec_1',
+            'email' => 'ceo@example.com',
+            'createdAt' => '2026-10-27T12:00:00.000Z',
+            'signature' => ['status' => 'pending', 'requestedAt' => '2026-11-01T08:17:47.782Z', 'useCount' => 0],
+        ], 201);
+        $this->transport->queueJson([
+            'id' => 'rec_1',
+            'email' => 'ceo@example.com',
+            'createdAt' => '2026-10-27T12:00:00.000Z',
+            'signature' => ['status' => 'revoked', 'revokedAt' => '2026-11-01T08:30:00.000Z', 'useCount' => 0],
+        ]);
+        $this->transport->queue(new HttpResponse(204, '', []));
+
+        $pending = PdfGate::requestRecipientSignature('rec_1');
+        $revoked = PdfGate::removeRecipientSignature('rec_1');
+        PdfGate::deleteRecipient('rec_1');
+
+        $this->assertInstanceOf(PdfGateRecipient::class, $pending);
+        $this->assertSame('pending', $pending->getSignature()?->getStatus());
+        $this->assertSame('revoked', $revoked->getSignature()?->getStatus());
+        $this->assertCount(3, $this->transport->requests);
+        $this->assertSame('POST', $this->transport->requests[0]->getMethod());
+        $this->assertSame('https://api-sandbox.pdfgate.com/recipient/rec_1/signature/request', $this->transport->requests[0]->getUrl());
+        $this->assertSame('DELETE', $this->transport->requests[1]->getMethod());
+        $this->assertSame('https://api-sandbox.pdfgate.com/recipient/rec_1/signature', $this->transport->requests[1]->getUrl());
+        $this->assertSame('DELETE', $this->transport->requests[2]->getMethod());
+        $this->assertSame('https://api-sandbox.pdfgate.com/recipient/rec_1', $this->transport->requests[2]->getUrl());
     }
 
     public function testDownloadStreamsPdfAsAttachment(): void

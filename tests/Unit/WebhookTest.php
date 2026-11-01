@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Event;
 use PdfGate\Exception\InvalidConfigurationException;
 use PdfGate\Laravel\Events\EnvelopeCompleted;
 use PdfGate\Laravel\Events\EnvelopeRecipientSigned;
+use PdfGate\Laravel\Events\RecipientSignatureEnrolled;
+use PdfGate\Laravel\Events\RecipientSignatureRevoked;
 use PdfGate\Laravel\Events\WebhookReceived;
 use PdfGate\Laravel\Tests\TestCase;
 
@@ -33,6 +35,28 @@ final class WebhookTest extends TestCase
             return $event->payload->eventId === 'evt_1' && $event->webhook === 'default';
         });
         Event::assertNotDispatched(EnvelopeRecipientSigned::class);
+    }
+
+    public function testRecipientSignatureEventsDispatchTypedEvents(): void
+    {
+        Event::fake();
+        $data = ['recipientId' => 'rec_1', 'enrolledAt' => '2026-11-01T08:21:32.140Z', 'adoptionMethod' => 'type_signature'];
+        $body = (string) json_encode($this->webhookBody('recipient.signature.enrolled', $data));
+
+        $this->call('POST', '/pdfgate/webhook', [], [], [], $this->headers($this->signature($body)), $body)
+            ->assertNoContent();
+
+        Event::assertDispatched(RecipientSignatureEnrolled::class, static function (RecipientSignatureEnrolled $event) use ($data): bool {
+            return $event->payload->type === 'recipient.signature.enrolled' && $event->payload->data === $data;
+        });
+        Event::assertNotDispatched(RecipientSignatureRevoked::class);
+
+        $body = (string) json_encode($this->webhookBody('recipient.signature.revoked', ['recipientId' => 'rec_1']));
+
+        $this->call('POST', '/pdfgate/webhook', [], [], [], $this->headers($this->signature($body)), $body)
+            ->assertNoContent();
+
+        Event::assertDispatched(RecipientSignatureRevoked::class);
     }
 
     public function testUnknownEventTypeDispatchesOnlyGenericEvent(): void

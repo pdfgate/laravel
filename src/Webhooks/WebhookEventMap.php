@@ -13,6 +13,8 @@ use PdfGate\Laravel\Events\EnvelopeRecipientActivated;
 use PdfGate\Laravel\Events\EnvelopeRecipientSigned;
 use PdfGate\Laravel\Events\EnvelopeSent;
 use PdfGate\Laravel\Events\EnvelopeVoided;
+use PdfGate\Laravel\Events\RecipientSignatureEnrolled;
+use PdfGate\Laravel\Events\RecipientSignatureRevoked;
 use PdfGate\Laravel\Events\WebhookEvent;
 
 /**
@@ -30,6 +32,8 @@ final class WebhookEventMap
         WebhookEventType::ENVELOPE_RECIPIENT_SIGNED => EnvelopeRecipientSigned::class,
         WebhookEventType::ENVELOPE_RECIPIENT_ACTIVATED => EnvelopeRecipientActivated::class,
         WebhookEventType::ENVELOPE_DOCUMENT_COMPLETED => EnvelopeDocumentCompleted::class,
+        WebhookEventType::RECIPIENT_SIGNATURE_ENROLLED => RecipientSignatureEnrolled::class,
+        WebhookEventType::RECIPIENT_SIGNATURE_REVOKED => RecipientSignatureRevoked::class,
     ];
 
     private function __construct()
