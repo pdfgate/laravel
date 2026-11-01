@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Automatic signing: the facade forwards `requestRecipientSignature()`, `removeRecipientSignature()` and `deleteRecipient()`, and envelope recipients accept `autoSign` and `sendSignedCopy` (PHP SDK 1.4).
+- `RecipientSignatureEnrolled` and `RecipientSignatureRevoked` events for the `recipient.signature.enrolled` and `recipient.signature.revoked` webhook event types.
+
+### Changed
+
+- Requires `pdfgate/pdfgate-sdk-php` 1.4 or later.
+
+## [1.0.0] - 2026-10-28
+
+### Added
+
 - Service provider that binds `PdfGateClient` and `PdfGateManager` as singletons from `PDFGATE_API_KEY`.
 - `PdfGate` facade exposing every SDK client method plus `download()`, `inline()` and `store()` helpers.
 - Publishable `config/pdfgate.php`.

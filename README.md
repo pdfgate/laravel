@@ -103,6 +103,36 @@ $envelope = PdfGate::createEnvelope([
 PdfGate::sendEnvelope($envelope->getId());
 ```
 
+### Automatic signing
+
+A recipient can store a reusable signature once, and later envelopes apply it on their behalf with no signing session. Request the enrolment and PDFGate emails the recipient a link where they verify their email, accept the authorization text and type, draw or upload their signature. Once the `recipient.signature.enrolled` webhook arrives, reference the recipient by id with `autoSign`.
+
+```php
+$recipient = PdfGate::createRecipient(['email' => 'ceo@example.com', 'name' => 'Jane Doe']);
+
+PdfGate::requestRecipientSignature($recipient->getId());
+
+// Later, once PdfGate::getRecipient($recipient->getId())->getSignature()->getStatus() is "active":
+$envelope = PdfGate::createEnvelope([
+    'requesterName' => 'Acme Inc.',
+    'documents' => [
+        [
+            'sourceDocumentId' => $document->getId(),
+            'name' => 'Employment Agreement',
+            'recipients' => [
+                ['email' => 'anna@example.com', 'name' => 'Anna Smith', 'role' => 'employee', 'signingOrder' => 1],
+                ['recipientId' => $recipient->getId(), 'role' => 'ceo', 'signingOrder' => 2, 'autoSign' => true],
+            ],
+        ],
+    ],
+]);
+
+PdfGate::removeRecipientSignature($recipient->getId()); // remove the stored signature or cancel a pending enrolment
+PdfGate::deleteRecipient($recipient->getId());          // refused while a signature is active or pending
+```
+
+Set `sendSignedCopy` on a recipient to control whether they are emailed the signed document when the document completes. It defaults to true for recipients who sign through the emailed signing link and false for embedded and automatic signing recipients.
+
 ### Dependency injection
 
 The SDK client is bound as a singleton, so you can inject it instead of using the facade:
@@ -139,6 +169,8 @@ A verified delivery dispatches `PdfGate\Laravel\Events\WebhookReceived` and, whe
 | `envelope.recipient.signed` | `EnvelopeRecipientSigned` |
 | `envelope.recipient.activated` | `EnvelopeRecipientActivated` |
 | `envelope.document.completed` | `EnvelopeDocumentCompleted` |
+| `recipient.signature.enrolled` | `RecipientSignatureEnrolled` |
+| `recipient.signature.revoked` | `RecipientSignatureRevoked` |
 
 All event classes live in `PdfGate\Laravel\Events` and carry two properties. `$webhook` is the name of the endpoint that received the delivery, `default` unless you registered more (see below). `$payload` holds:
 
